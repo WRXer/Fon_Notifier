@@ -1,7 +1,8 @@
 import requests
 
 
-sent_events = {}  # Словарь для отслеживания отправленных событий
+sent_events = {}    # Словарь для отслеживания отправленных событий
+
 
 def fetch_and_display_events():
     """
@@ -23,30 +24,26 @@ def fetch_and_display_events():
     )
     data = response.json()
 
-
-    #sport_ids = [113000, 49280, 17428, 24713]  # Укажите ID лиги, которую хотите отфильтровать
-
     events = data.get('events', [])
     filtered_events = [
         event for event in events
         if event.get('place') == 'live' and
            event.get('sportId') in sport_ids and
            event.get('level') == 1
-    ]
-
+    ]   # Фильтруем нужные нам ивенты
+    print(filtered_events)
     new_events = [
         event for event in filtered_events
         if event['id'] not in sent_events
-    ]
+    ]   # Добавляем новые ивенты в отправленные, чтобы не повторялась отправка
 
     if new_events:
         message_matches = ""
         for event in new_events:
             message_matches += (
-                f"Матч {event.get('team1')} - {event.get('team2')} начинается!\n"
+                f"{event.get('team1')} - {event.get('team2')}\n"
             )
-            sent_events[event['id']] = event  # Отмечаем событие как отправленное
-
+            sent_events[event['id']] = event    # Отмечаем событие как отправленное
         return message_matches
     else:
         return None
