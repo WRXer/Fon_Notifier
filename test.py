@@ -45,5 +45,28 @@ async def start_handler(message):
     await send_message()    # Запускаем отправку сообщения
 
 
+@bot.message_handler(commands=['id'])
+async def id_handler(message):
+    """
+    Добавил возможность добавления id пользователям
+    :param message:
+    :return:
+    """
+    chat_id = message.chat.id
+    try:
+        sport_id = int(message.text.split()[1])
+        with open('sport_ids.txt', 'r') as f:    # Чтение существующих ID из файла
+            existing_ids = {int(line.strip()) for line in f if line.strip().isdigit()}
+
+        if sport_id in existing_ids:
+            await bot.send_message(chat_id, f"ID {sport_id} уже существует в списке.")
+        else:
+            with open('sport_ids.txt', 'a') as f:
+                f.write(f"{sport_id}\n")
+            await bot.send_message(chat_id, f"ID {sport_id} добавлен в список.")
+    except (IndexError, ValueError):
+        await bot.send_message(chat_id, "Пожалуйста, введите правильный ID, используя формат /id <число>.")
+
+
 if __name__ == "__main__":
     asyncio.run(bot.infinity_polling(logger_level=True))
