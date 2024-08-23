@@ -35,6 +35,7 @@ async def send_message():
 
 
 async def schedule_next_message():
+    await asyncio.sleep(20)    # Ждем 10 секунд перед отправкой следующего сообщения
     await send_message()    # Отправляем сообщение и снова планируем следующую задачу
 
 
