@@ -70,5 +70,30 @@ async def id_handler(message):
         await bot.send_message(chat_id, "Пожалуйста, введите правильный ID, используя формат /id <число>.")
 
 
+@bot.message_handler(commands=['del'])
+async def id_handler(message):
+    """
+    Добавил возможность удаления del пользователям
+    :param message:
+    :return:
+    """
+    chat_id = message.chat.id
+    try:
+        sport_id = int(message.text.split()[1])
+        with open('sport_ids.txt', 'r') as f:    # Чтение существующих ID из файла
+            existing_ids = {int(line.strip()) for line in f if line.strip().isdigit()}
+
+        if sport_id in existing_ids:
+            with open('sport_ids.txt', 'w') as f:
+                for id in existing_ids:
+                    if id != sport_id:
+                        f.write(f"{id}\n")
+            await bot.send_message(chat_id, f"ID {sport_id} удален из списка.")
+        else:
+            await bot.send_message(chat_id, f"ID {sport_id} не найден в списке.")
+    except (IndexError, ValueError):
+        await bot.send_message(chat_id, "Пожалуйста, введите правильный ID для удаления, используя формат /del <число>.")
+
+
 if __name__ == "__main__":
     asyncio.run(bot.infinity_polling(logger_level=True))
