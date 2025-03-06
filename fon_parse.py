@@ -36,7 +36,7 @@ def fetch_and_display_events():
         event for event in filtered_events
         if event['id'] not in sent_events
     ]   # Добавляем новые ивенты в отправленные, чтобы не повторялась отправка
-
+    print(new_events)
     if new_events:
         message_matches = ""
         for event in new_events:
