@@ -159,6 +159,7 @@ async def admin_handler(message):
         admin_text = ('Функции:\n'
                       '- /users Список пользователей\n'
                       '- /data Выгрузить базу данных\n'
+                      '- Можете скинуть файл с обновленной data.json'
                       )
         await bot.send_message(message.chat.id, admin_text, parse_mode="Markdown")
     else:
@@ -187,6 +188,22 @@ async def data_handler(message):
                 await bot.send_document(chat_id, file, caption="Вот файл с базой данных.")
         else:
             await bot.send_message(chat_id, "Файл данных не найден.")
+    else:
+        await bot.send_message(chat_id, "У вас нет доступа к этой команде.")
+
+@bot.message_handler(content_types=['document'])
+async def handle_document(message):
+    chat_id = message.chat.id
+    if int(chat_id) == int(ADMIN_ID):  # Проверка, является ли пользователь администратором
+        if message.document.file_name == 'data.json':    #Проверяем, что файл называется data.json
+            file_id = message.document.file_id    #Получаем ID файла
+            file_info = await bot.get_file(file_id)    #Получаем файл
+            downloaded_file = await bot.download_file(file_info.file_path)
+            with open('data.json', 'wb') as f:    #Сохраняем файл как data.json
+                f.write(downloaded_file)
+            await bot.send_message(chat_id, "Файл данных успешно заменён.")
+        else:
+            await bot.send_message(chat_id, "Пожалуйста, отправьте файл с именем 'data.json'.")
     else:
         await bot.send_message(chat_id, "У вас нет доступа к этой команде.")
 
