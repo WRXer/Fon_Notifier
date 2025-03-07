@@ -13,6 +13,7 @@ load_dotenv()
 
 TOKEN_BOT = os.getenv('TOKEN_BOT')
 LOG_LEVEL = True
+ADMIN_ID = os.getenv('ADMIN_ID')
 
 setup_logging()    #Вызываем функцию для настройки логирования
 
@@ -151,6 +152,73 @@ async def handle_link(message):
     else:
         await bot.send_message(chat_id, f"ID лиги {league_id} уже есть в вашем списке.")
 
+@bot.message_handler(commands=['admin'])
+async def admin_handler(message):
+    chat_id = message.chat.id
+    if int(chat_id) == int(ADMIN_ID):    #Проверка, является ли пользователь администратором
+        admin_text = ('Функции:\n'
+                      '- /users Список пользователей\n'
+                      '- /data Выгрузить базу данных\n'
+                      '- log Выгрузка логов\n'
+                      '- Можете скинуть файл с обновленной data.json'
+                      )
+        await bot.send_message(message.chat.id, admin_text, parse_mode="Markdown")
+    else:
+        await bot.send_message(chat_id, "У вас нет доступа к этой команде.")
+
+@bot.message_handler(commands=['users'])
+async def users_handler(message):
+    chat_id = message.chat.id
+    if int(chat_id) == int(ADMIN_ID):    #Проверка, является ли пользователь администратором
+        league_data = load_data()
+        users = list(league_data.keys())    #Получаем список всех пользователей
+        if users:
+            user_list = "\n".join([f"User ID: {user}" for user in users])
+            await bot.send_message(chat_id, f"Список всех пользователей:\n{user_list}")
+        else:
+            await bot.send_message(chat_id, "Нет зарегистрированных пользователей.")
+    else:
+        await bot.send_message(chat_id, "У вас нет доступа к этой команде.")
+
+@bot.message_handler(commands=['data'])
+async def data_handler(message):
+    chat_id = message.chat.id
+    if int(chat_id) == int(ADMIN_ID):    #Проверка, является ли пользователь администратором
+        if 'data.json':    #Проверяем, существует ли файл с данными
+            with open('data.json', 'rb') as file:
+                await bot.send_document(chat_id, file, caption="Вот файл с базой данных.")
+        else:
+            await bot.send_message(chat_id, "Файл данных не найден.")
+    else:
+        await bot.send_message(chat_id, "У вас нет доступа к этой команде.")
+
+@bot.message_handler(commands=['log'])
+async def log_handler(message):
+    chat_id = message.chat.id
+    if int(chat_id) == int(ADMIN_ID):  # Проверка, является ли пользователь администратором
+        if 'bot_log.txt':    #Проверяем, существует ли файл с логами
+            with open('bot_log.txt', 'rb') as file:
+                await bot.send_document(chat_id, file, caption="Вот файл с логами.")
+        else:
+            await bot.send_message(chat_id, "Файл логов не найден.")
+    else:
+        await bot.send_message(chat_id, "У вас нет доступа к этой команде.")
+
+@bot.message_handler(content_types=['document'])
+async def handle_document(message):
+    chat_id = message.chat.id
+    if int(chat_id) == int(ADMIN_ID):  # Проверка, является ли пользователь администратором
+        if message.document.file_name == 'data.json':    #Проверяем, что файл называется data.json
+            file_id = message.document.file_id    #Получаем ID файла
+            file_info = await bot.get_file(file_id)    #Получаем файл
+            downloaded_file = await bot.download_file(file_info.file_path)
+            with open('data.json', 'wb') as f:    #Сохраняем файл как data.json
+                f.write(downloaded_file)
+            await bot.send_message(chat_id, "Файл данных успешно заменён.")
+        else:
+            await bot.send_message(chat_id, "Пожалуйста, отправьте файл с именем 'data.json'.")
+    else:
+        await bot.send_message(chat_id, "У вас нет доступа к этой команде.")
 
 if __name__ == "__main__":
     asyncio.run(bot.infinity_polling(logger_level=True))
