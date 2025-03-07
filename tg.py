@@ -159,6 +159,7 @@ async def admin_handler(message):
         admin_text = ('Функции:\n'
                       '- /users Список пользователей\n'
                       '- /data Выгрузить базу данных\n'
+                      '- log Выгрузка логов\n'
                       '- Можете скинуть файл с обновленной data.json'
                       )
         await bot.send_message(message.chat.id, admin_text, parse_mode="Markdown")
@@ -188,6 +189,18 @@ async def data_handler(message):
                 await bot.send_document(chat_id, file, caption="Вот файл с базой данных.")
         else:
             await bot.send_message(chat_id, "Файл данных не найден.")
+    else:
+        await bot.send_message(chat_id, "У вас нет доступа к этой команде.")
+
+@bot.message_handler(commands=['log'])
+async def log_handler(message):
+    chat_id = message.chat.id
+    if int(chat_id) == int(ADMIN_ID):  # Проверка, является ли пользователь администратором
+        if 'bot_log.txt':    #Проверяем, существует ли файл с логами
+            with open('bot_log.txt', 'rb') as file:
+                await bot.send_document(chat_id, file, caption="Вот файл с логами.")
+        else:
+            await bot.send_message(chat_id, "Файл логов не найден.")
     else:
         await bot.send_message(chat_id, "У вас нет доступа к этой команде.")
 
