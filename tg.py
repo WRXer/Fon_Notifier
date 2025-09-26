@@ -20,15 +20,16 @@ setup_logging()    #Вызываем функцию для настройки л
 bot = AsyncTeleBot(TOKEN_BOT)
 telebot.logger.setLevel(LOG_LEVEL)
 
-
-chat_ids = set()    #Глобальный список для хранения chat_id пользователей
+data = load_data()
+chat_ids = set(data.keys())    #Глобальный список для хранения chat_id пользователей
 
 
 async def send_message():
     try:
         loop = asyncio.get_running_loop()
+        data = load_data()
         tasks = []    #Список задач для отправки сообщений
-        for chat_id in chat_ids:
+        for chat_id in data.keys():
             message_matches = await loop.run_in_executor(None, fetch_and_display_events, chat_id)
 
             if message_matches:
@@ -47,9 +48,14 @@ async def schedule_next_message():
 
 @bot.message_handler(commands=['start'])
 async def start_handler(message):
-    chat_id = message.chat.id
-    chat_ids.add(chat_id)    #Добавляем chat_id в список
-    await bot.send_message(chat_id, "Бот активирован")
+    chat_id = str(message.chat.id)
+    data = load_data()
+
+    if chat_id not in data:
+        data[chat_id] = []
+        save_data(data)
+    chat_ids.add(chat_id)
+    await bot.send_message(chat_id, "Бот активирован!")
     await send_message()    #Запускаем отправку сообщения
 
 @bot.message_handler(commands=['help'])
@@ -220,5 +226,9 @@ async def handle_document(message):
     else:
         await bot.send_message(chat_id, "У вас нет доступа к этой команде.")
 
+async def main():
+    asyncio.create_task(send_message())
+    await bot.infinity_polling(logger_level=True)
+
 if __name__ == "__main__":
-    asyncio.run(bot.infinity_polling(logger_level=True))
+    asyncio.run(main())
